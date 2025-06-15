@@ -1,0 +1,34 @@
+{
+  "name": "video-conversion-rest-api",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "nodemon",
+    "start": "node --experimental-strip-types ./src/server.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.758.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "node-cron": "^4.0.7",
+    "simple-worker-thread-queue": "^1.0.8",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@stylistic/eslint-plugin": "^2.11.0",
+    "@types/express": "^5.0.0",
+    "eslint": "^9.15.0",
+    "nodemon": "^3.1.9",
+    "typescript-eslint": "^8.16.0"
+  }
+}
