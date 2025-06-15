@@ -15,7 +15,7 @@ config();
 // use local directory if running directly on host machine; use docker volumne if running in docker container
 const isRunningInDocker: boolean = process.env.DOCKERIZED === 'true';
 const WORKDIR_PATH_HOST_FILESYSTEM: string = path.join(import.meta.dirname, '../../workdir');
-const DOCKER_WORKDIR_VOLUME_NAME: string = 'gallery-transcode-workdir';
+const DOCKER_WORKDIR_VOLUME_NAME: string = 'video-conversion-rest-api-workdir';
 
 export const processJob: ProcessJobFunction<TranscodeJobOptions, TranscodeJobData> = async function (jobOptions: TranscodeJobOptions, job: JobType<TranscodeJobOptions, TranscodeJobData>): Promise<TranscodeJobData> {
   const { format } = jobOptions;

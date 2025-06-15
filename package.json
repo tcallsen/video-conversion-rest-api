@@ -11,7 +11,11 @@
     "dev": "nodemon",
     "start": "node --experimental-strip-types ./src/server.ts",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "docker:init": "./scripts/docker/init.sh",
+    "docker:build": "./scripts/docker/build.sh",
+    "docker:run": "./scripts/docker/run.sh",
+    "docker:clean": "./scripts/docker/clean.sh"
   },
   "author": "",
   "license": "ISC",
