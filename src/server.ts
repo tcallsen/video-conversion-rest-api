@@ -32,7 +32,14 @@ app.post('/create', async (req: Request, res: Response) => {
 });
 
 app.post('/createBatch', async (req: Request, res: Response) => {
-  const batch: BatchType<TranscodeJobOptions, TranscodeJobData> = new Batch(batchCallback);
+  // define batch with webhook callback if URL provided in .env config, otherwise forget about it
+  let batch: BatchType<TranscodeJobOptions, TranscodeJobData>;
+  if (process.env.BATCH_CALLBACK_URL) {
+    batch = new Batch(batchCallback);
+  } else {
+    batch = new Batch();
+  }
+
   try {
     const transcodeJobOptions: TranscodeJobOptions[] = parseRequestBodyToJobOptions(req);
     transcodeJobOptions.forEach((transcodeJob) => {
