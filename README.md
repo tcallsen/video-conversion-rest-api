@@ -1,12 +1,16 @@
 # Node.js Video Transcoding REST API
 
-A Node.js REST API that performs FFmpeg video conversion jobs. Developed as an alternative to the AWS Elastic Transcoder service.
+A Node.js REST API that performs FFmpeg video conversion jobs, reading and writing videos to AWS S3. Developed as an alternative to the AWS Elastic Transcoder service.
 
-The base implementation reads source video files from an AWS S3 bucket, perform transcoding via FFmpeg in a local docker container, and then writes transcoded videos back to an S3 bucket.
+## Overview
 
-When video processing has completed, a optional webhook `POST` request is sent to the configured `BATCH_CALLBACK_URL` containing completed job information.
+![Diagram showing components and interactions of this Vido Transcoding REST API](./docs/Video%20Converstion%20REST%20API%20v1.drawio.svg)
 
-Transcoding jobs are processed sequentially one at a time in the order recieved. Specifying a `CONCURRENT_WORKER_THREADS` config value larger than 1 will allow parallel processing (in independent docker containers).
+Jobs submitted to a REST API are queued and then processed in separate Node.js worker threads. Transcoding is performed by FFmpeg inside a docker container.
+
+Source video files are read from AWS S3, and then the transcoded videos are written back to the same S3 bucket. For extensibility, the [FileManager.ts](./src/types/FileManager.ts) interfaces can be re-implemented to hook up to other storage mechanisms.
+
+When video processing has completed, an optional `POST` request (webhook) with completed job information is sent to the `BATCH_CALLBACK_URL` (if configured).
 
 ## Use
 
@@ -31,11 +35,11 @@ curl --request POST \
   ]'
 ```
 
-Once processing has completed, the transcoded video will be available in S3 at the path `${S3_BUCKET_NAME}/swap/output.mp4`, and an optional webhook will be fired to `BATCH_CALLBACK_URL` that can notify other systems.
+For this sample request, the transcoded video would be available in S3 at path `${S3_BUCKET_NAME}/swap/output.mp4` once processing is complete.
 
 ### Transcoding Options
 
-The FFmpeg configuration is defined in the `format` property of the `POST` body. Any transcoding options that are not provided will be populated with the following defaults:
+The FFmpeg configuration is defined in the `format` property of the `POST` body of the REST request. Any transcoding options that are not provided will be populated with the following defaults:
 
 ```
 [
@@ -60,7 +64,7 @@ The FFmpeg configuration is defined in the `format` property of the `POST` body.
 
 The `container` specifies the desired video container (e.g. `mp4`, `webm`, etc.). Any video and audio codecs available to FFmpeg in the [jrottenberg/ffmpeg:7.1-alpine](https://github.com/jrottenberg/ffmpeg) docker container are supported.
 
-Multiple conversion jobs can be provided as part of the same batch request, simply add new entries to the `POST` request body:
+Multiple conversion jobs can be provided as part of the same request, simply add multiple entries to the initial `POST` request body:
 
 ```
 [
@@ -92,6 +96,8 @@ Multiple conversion jobs can be provided as part of the same batch request, simp
 
 ## Running the Service
 
+### Installing Dependencies
+
 After cloning the repo, run the following commands to install dependencies:
 
 ```
@@ -99,9 +105,11 @@ nvm use
 npm install
 ```
 
+In addition, the service requires a Docker runtime to be available locally (or configured in the `DOCKER_HOST` env variable).
+
 ### Configuring
 
-Create a `.env` file in the root of the repo based on the [.env.example](./.env.example) file and populate with the appropriate values, including AWS credentials and an option `BATCH_CALLBACK_URL` which is notified via webhook when processing completes.
+Create a `.env` file in the root of the repo based on the [.env.example](./.env.example) file and populate it with the appropriate values (including AWS credentials).
 
 ### Starting
 
@@ -111,6 +119,38 @@ Execute the following commands to start the service and REST API:
 npm run start
 ```
 
-## Using Other Storage Providers
+### Running in a Docker Container
 
-While the base implementation reads and writes videos to AWS S3, the [FileManager.ts](./src/types/FileManager.ts) interfaces can be re-implemented to hook up to other storage mechanisms outside of S3.
+Scripts have been provided in the [./scripts/docker](./scripts/docker) directory to help build and run this service as a Docker container.
+
+Pleaes review these scripts before using them, especially the paths and permissions set in [./scripts/docker/init.sh](./scripts/docker/init.sh).
+
+These scripts can be executed with:
+
+```
+# creates volumne and sets permissions - must be run as sudo
+sudo npm run docker:init
+
+# builds docker container from repo code
+npm run docker:build
+
+# runs the docker container
+npm run docker:run
+
+# removes any containers, images, and volumnes
+npm run docker:clean
+```
+
+## Misc.
+
+### Queuing Library
+
+This service uses the [simple-worker-thread-queue](https://github.com/tcallsen/simple-worker-thread-queue) npm module to handle the queuing and execution of jobs in worker threads.
+
+### Completion Callback POST Request
+
+When video processing has completed, an optional `POST` request (webhook) with completed job information is sent to the configured `BATCH_CALLBACK_URL`.
+
+This occurs only if `BATCH_CALLBACK_URL` is defined in the `.env` file.
+
+The structure of the `POST` body for this request can be found in [./src/callback/batchCallback.ts](./src/callback/batchCallback.ts).

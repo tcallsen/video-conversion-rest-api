@@ -13,7 +13,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "docker:init": "./scripts/docker/init.sh",
-    "docker:build": "./scripts/docker/build.sh",
+    "docker:build": "npm install && ./scripts/docker/build.sh",
     "docker:run": "./scripts/docker/run.sh",
     "docker:clean": "./scripts/docker/clean.sh"
   },
